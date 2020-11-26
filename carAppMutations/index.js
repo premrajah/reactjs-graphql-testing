@@ -31,6 +31,10 @@ const schema = buildSchema(`
         carsByType(type: CarTypes!): [Car]
         carsById(id:ID!): Car
     }
+
+    type Mutation {
+        insertCar(brand: String!, color: String!, doors: Int!, type: CarTypes!): [Car]!
+    }
 `)
 
 // create resolvers
@@ -43,7 +47,19 @@ const resolvers = () => {
         return db.cars.filter(car => car.id === args.id)[0]
     }
 
-    return { carsByType, carsById }
+    const insertCar = ({ brand, color, doors, type }) => {
+        db.cars.push({
+            id: Math.random().toString(),
+            brand: brand,
+            color: color,
+            doors: doors,
+            type: type,
+        })
+        return db.cars
+    }
+
+
+    return { carsByType, carsById, insertCar }
 }
 
 
@@ -72,11 +88,25 @@ const excuteQuery = async () => {
     }
     `
 
+    const mutationQuery = `
+        mutation {
+            insertCar(brand: "Nissan", color: "Pink", doors: 5, type: SUV) {
+                brand
+                color
+                doors
+                id
+            }
+        }
+    `
+
     const responseOne = await graphql(schema, queryByType, resolvers())
-    console.log(responseOne.data)
+    // console.log(responseOne.data)
 
     const responseTwo = await graphql(schema, queryById, resolvers())
-    console.log(responseTwo.data)
+    // console.log(responseTwo.data)
+
+    const mutationResponse = await graphql(schema, mutationQuery, resolvers());
+    console.log(mutationResponse.data);
 }
 
 excuteQuery();
