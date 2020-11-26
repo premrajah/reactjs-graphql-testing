@@ -77,6 +77,9 @@ const excuteQuery = async () => {
     }
     `
 
+    const responseOne = await graphql(schema, queryByType, resolvers())
+    // console.log(responseOne.data)
+
     const queryById = `
     {
         carsById(id: "b") {
@@ -87,6 +90,8 @@ const excuteQuery = async () => {
         }
     }
     `
+    const responseTwo = await graphql(schema, queryById, resolvers())
+    // console.log(responseTwo.data)
 
     const mutationQuery = `
         mutation {
@@ -99,14 +104,30 @@ const excuteQuery = async () => {
         }
     `
 
-    const responseOne = await graphql(schema, queryByType, resolvers())
-    // console.log(responseOne.data)
-
-    const responseTwo = await graphql(schema, queryById, resolvers())
-    // console.log(responseTwo.data)
-
     const mutationResponse = await graphql(schema, mutationQuery, resolvers());
-    console.log(mutationResponse.data);
+    // console.log(mutationResponse.data);
+
+    const mutationsWithVariables = `
+        mutation insertCar($brand: String!, $color: String!, $doors: Int!, $type: CarTypes!) {
+            insertCar(brand: $brand, color: $color, doors: $doors, type: $type) {
+                brand
+                color
+                id
+                doors
+            }
+        }
+    `
+
+    const mutationVarResponse = await graphql(schema, mutationsWithVariables, resolvers(), null, {
+        brand: 'Mustang',
+        color: 'Orange',
+        doors: 2,
+        type: 'Coupe'
+    })
+
+    console.log(mutationVarResponse.data)
+
+
 }
 
 excuteQuery();
