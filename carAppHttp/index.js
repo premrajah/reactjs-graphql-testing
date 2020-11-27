@@ -1,4 +1,6 @@
 const { graphql, buildSchema } = require('graphql')
+const express = require('express')
+const { graphqlHTTP } = require('express-graphql')
 
 // create a memory db
 const db = {
@@ -64,71 +66,81 @@ const resolvers = () => {
 
 
 // excute queries
-const excuteQuery = async () => {
+// const excuteQuery = async () => {
 
-    const queryByType = `
-    {
-        carsByType(type: Coupe) {
-            brand
-            color
-            type
-            id
-        }
-    }
-    `
+//     const queryByType = `
+//     {
+//         carsByType(type: Coupe) {
+//             brand
+//             color
+//             type
+//             id
+//         }
+//     }
+//     `
 
-    const responseOne = await graphql(schema, queryByType, resolvers())
-    // console.log(responseOne.data)
+//     const responseOne = await graphql(schema, queryByType, resolvers())
+//     // console.log(responseOne.data)
 
-    const queryById = `
-    {
-        carsById(id: "b") {
-        brand
-        color
-        type
-        id
-        }
-    }
-    `
-    const responseTwo = await graphql(schema, queryById, resolvers())
-    // console.log(responseTwo.data)
+//     const queryById = `
+//     {
+//         carsById(id: "b") {
+//         brand
+//         color
+//         type
+//         id
+//         }
+//     }
+//     `
+//     const responseTwo = await graphql(schema, queryById, resolvers())
+//     // console.log(responseTwo.data)
 
-    const mutationQuery = `
-        mutation {
-            insertCar(brand: "Nissan", color: "Pink", doors: 5, type: SUV) {
-                brand
-                color
-                doors
-                id
-            }
-        }
-    `
+//     const mutationQuery = `
+//         mutation {
+//             insertCar(brand: "Nissan", color: "Pink", doors: 5, type: SUV) {
+//                 brand
+//                 color
+//                 doors
+//                 id
+//             }
+//         }
+//     `
 
-    const mutationResponse = await graphql(schema, mutationQuery, resolvers());
-    // console.log(mutationResponse.data);
+//     const mutationResponse = await graphql(schema, mutationQuery, resolvers());
+//     // console.log(mutationResponse.data);
 
-    const mutationsWithVariables = `
-        mutation insertCar($brand: String!, $color: String!, $doors: Int!, $type: CarTypes!) {
-            insertCar(brand: $brand, color: $color, doors: $doors, type: $type) {
-                brand
-                color
-                id
-                doors
-            }
-        }
-    `
+//     const mutationsWithVariables = `
+//         mutation insertCar($brand: String!, $color: String!, $doors: Int!, $type: CarTypes!) {
+//             insertCar(brand: $brand, color: $color, doors: $doors, type: $type) {
+//                 brand
+//                 color
+//                 id
+//                 doors
+//             }
+//         }
+//     `
 
-    const mutationVarResponse = await graphql(schema, mutationsWithVariables, resolvers(), null, {
-        brand: 'Mustang',
-        color: 'Orange',
-        doors: 2,
-        type: 'Coupe'
-    })
+//     const mutationVarResponse = await graphql(schema, mutationsWithVariables, resolvers(), null, {
+//         brand: 'Mustang',
+//         color: 'Orange',
+//         doors: 2,
+//         type: 'Coupe'
+//     })
 
-    console.log(mutationVarResponse.data)
+//     console.log(mutationVarResponse.data)
 
 
-}
+// }
+// excuteQuery();
 
-excuteQuery();
 
+
+// http server
+const app = express();
+
+app.use(
+    '/graphql',
+    graphqlHTTP({ schema: schema, rootValue: resolvers(), graphiql: true }))
+
+app.listen(3000)
+console.log('GraphQL server is listening to PORT 3000')
