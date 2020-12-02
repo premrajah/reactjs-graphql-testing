@@ -2,14 +2,16 @@
 const { ApolloServer, gql } = require('apollo-server')
 
 // create a memory db
-const db = {
-    cars: [
-        { id: 'a', brand: 'Ford', color: 'Blue', doors: 4, type: 'Sedan' },
-        { id: 'b', brand: 'Tesla', color: 'Red', doors: 4, type: 'SUV' },
-        { id: 'c', brand: 'Toyota', color: 'White', doors: 3, type: 'Coupe' },
-        { id: 'd', brand: 'Fiat', color: 'Green', doors: 5, type: 'Coupe' },
-    ]
-}
+const cars = [
+    { id: '1', brand: 'Toyota Corola', color: 'Blue', doors: 4, type: 'Sedan', parts: [{ id: '1' }, { id: '2' }] },
+    { id: '2', brand: 'Toyota Camry', color: 'Red', doors: 3, type: 'SUV', parts: [{ id: '1' }, { id: '3' }] },
+]
+
+const parts = [
+    { id: '1', name: 'Transmission', cars: [{ id: '1' }, { id: '2' }] },
+    { id: '2', name: 'Suspension', cars: [{ id: '1' }] },
+]
+
 
 // create schema
 const schema = gql(`
@@ -17,22 +19,25 @@ const schema = gql(`
         Sedan
         SUV
         Coupe
-        Limo
     }
-
     type Car {
         id: ID!
         brand: String!
         color: String!
         doors: Int!
-        type: CarTypes
+        type: CarTypes!
+        parts: [Part]
     }
-
+    type Part {
+        id: ID!
+        name: String
+        cars: [Car]
+    }
     type Query {
         carsByType(type: CarTypes!): [Car]
         carsById(id:ID!): Car
+        partsById(id:ID!): Part
     }
-
     type Mutation {
         insertCar(brand: String!, color: String!, doors: Int!, type: CarTypes!): [Car]!
     }
@@ -41,30 +46,43 @@ const schema = gql(`
 // create resolver map
 const resolvers = {
     Query: {
-        carsByType: (parent, args, context, info) => {
-            return db.cars.filter(car => car.type === args.type)
+        carsById: (parent, args, context, info) => args,
+        carsByType: (parent, args, context, info) => args,
+        partsById: (parent, args, context, info) => args,
+    },
+    Part: {
+        name: (parent, args, context, info) => {
+            if (parts.filter(part => part.id === parent.id)[0]) {
+                return parts.filter(part => part.id === parent.id)[0].name
+            }
+            return null
         },
-        carsById: (parent, args, context, info) => {
-            return db.cars.filter(car => car.id === args.id)[0]
+        cars: (parent, args, context, info) => {
+            return parts.filter(part => part.partId === parent.partId)[0].cars
         }
     },
     Car: {
         brand: (parent, args, context, info) => {
-            return db.cars.filter(car => car.brand === parent.brand)[0].brand
+            return cars.filter(car => car.id === parent.id)[0].brand
+        },
+        type: (parent, args, context, info) => {
+            return cars.filter(car => car.id === parent.id)[0].type
+        },
+        color: (parent, args, context, info) => {
+            return cars.filter(car => car.id === parent.id)[0].color
+        },
+        doors: (parent, args, context, info) => {
+            return cars.filter(car => car.id === parent.id)[0].doors
+        },
+        parts: (parent, args, context, info) => {
+            return cars.filter(car => car.id === parent.id)[0].parts
         }
     },
-    Mutation: {
-        insertCar: (_, { brand, color, doors, type }) => {
-            db.cars.push({
-                id: Math.random().toString(),
-                brand: brand,
-                color: color,
-                doors: doors,
-                type: type
-            })
-            return db.cars
-        }
-    }
+    // Cars: {
+    //     cars: (parent, args, context, info) => {
+    //         return cars.filter(car => car.type === parent.type)
+    //     }
+    // }
 }
 
 // create apollo server
